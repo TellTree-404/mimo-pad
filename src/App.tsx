@@ -12,7 +12,8 @@ import { Sidebar } from './components/sidebar/Sidebar';
 import { ConversationList } from './components/sidebar/ConversationList';
 import { ChatArea } from './components/chat/ChatArea';
 import { SettingsPanel } from './components/settings/SettingsPanel';
-import type { ChatMessage, ToolCall, ProviderConfig, McpServerConfig, Project } from './types';
+import { YoloConfirm } from './components/common/YoloConfirm';
+import type { ChatMessage, ToolCall, ProviderConfig, McpServerConfig, Project, AgentMode, ThinkingLevel } from './types';
 
 function App() {
   const {
@@ -56,6 +57,9 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [cacheInfo, setCacheInfo] = useState<LLMCacheInfo>({ hitTokens: 0, missTokens: 0 });
+  const [agentMode, setAgentMode] = useState<AgentMode>('agent');
+  const [thinkingLevel, setThinkingLevel] = useState<ThinkingLevel>('auto');
+  const [yoloPending, setYoloPending] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -138,6 +142,19 @@ function App() {
     setSidebarOpen(false);
   }, [settings.activeModelId, settings.activeProviderId, settings.defaultSystemPrompt, projects]);
 
+  const handleModeChange = useCallback((mode: AgentMode) => {
+    if (mode === 'yolo') {
+      setYoloPending(true);
+    } else {
+      setAgentMode(mode);
+    }
+  }, []);
+
+  const handleYoloConfirm = useCallback(() => {
+    setYoloPending(false);
+    setAgentMode('yolo');
+  }, []);
+
   const handleSend = useCallback(async (text: string) => {
     let convId = activeId;
     if (!convId) {
@@ -180,7 +197,17 @@ function App() {
         .filter((s: McpServerConfig) => connectedIds.includes(s.id))
         .map((s: McpServerConfig) => s.id);
 
-      const tools = enabledMcpIds.length > 0 ? getToolsForProvider(enabledMcpIds) : undefined;
+      let tools: unknown[] | undefined;
+      if (agentMode === 'plan') {
+        const allTools = enabledMcpIds.length > 0 ? (getToolsForProvider(enabledMcpIds) as { function?: { name?: string } }[]) : [];
+        tools = allTools.filter((t) => {
+          const name = t.function?.name;
+          return name && !['execute_code', 'termux_run', 'termux_install'].includes(name);
+        });
+        if (tools.length === 0) tools = undefined;
+      } else {
+        tools = enabledMcpIds.length > 0 ? getToolsForProvider(enabledMcpIds) : undefined;
+      }
 
       let allMessages = [...conv.messages];
 
@@ -237,6 +264,7 @@ function App() {
           maxTokens: 4096,
           temperature: 0.7,
           stream: true,
+          reasoningEffort: thinkingLevel,
         });
 
         for await (const chunk of stream) {
@@ -354,6 +382,7 @@ function App() {
               maxTokens: 4096,
               temperature: 0.7,
               stream: true,
+              reasoningEffort: thinkingLevel,
             });
 
             for await (const chunk of nextStream) {
@@ -472,8 +501,12 @@ function App() {
           settings={settings}
           generating={generating}
           cacheHitTokens={cacheInfo.hitTokens}
+          agentMode={agentMode}
+          thinkingLevel={thinkingLevel}
           onSend={handleSend}
           onModelChange={setActiveModel}
+          onModeChange={handleModeChange}
+          onThinkingChange={setThinkingLevel}
         />
       </div>
 
@@ -502,6 +535,12 @@ function App() {
           a.click();
           URL.revokeObjectURL(url);
         }}
+      />
+
+      <YoloConfirm
+        visible={yoloPending}
+        onConfirm={handleYoloConfirm}
+        onCancel={() => setYoloPending(false)}
       />
     </div>
   );

@@ -149,6 +149,8 @@ export const DEFAULT_PROVIDERS: ProviderConfig[] = [
 
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
+  thinkingLevel: 'auto',
+  agentMode: 'agent',
   fontSize: 16,
   language: 'zh',
   voiceInputMode: 'toggle',

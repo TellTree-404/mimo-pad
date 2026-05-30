@@ -1,4 +1,6 @@
 export type MessageRole = 'user' | 'assistant' | 'system' | 'tool';
+export type ThinkingLevel = 'auto' | 'off' | 'low' | 'medium' | 'high' | 'max';
+export type AgentMode = 'plan' | 'agent' | 'yolo';
 
 export interface ToolCall {
   id: string;
@@ -110,6 +112,8 @@ export interface MemoryEntry {
 
 export interface AppSettings {
   theme: 'dark' | 'parchment';
+  thinkingLevel: ThinkingLevel;
+  agentMode: AgentMode;
   backgroundImage?: string;
   fontSize: number;
   language: 'zh' | 'en';
@@ -147,6 +151,7 @@ export interface LLMChatParams {
   temperature?: number;
   topP?: number;
   stream?: boolean;
+  reasoningEffort?: string;
 }
 
 export interface StreamChunk {

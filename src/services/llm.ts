@@ -38,6 +38,7 @@ function buildOpenAIRequest(params: LLMChatParams): { url: string; headers: Reco
   if (topP !== undefined) bodyObj.top_p = topP;
   if (tools) bodyObj.tools = tools;
   if (toolChoice) bodyObj.tool_choice = toolChoice;
+  if (params.reasoningEffort && params.reasoningEffort !== 'auto') bodyObj.reasoning_effort = params.reasoningEffort;
 
   return {
     url,
