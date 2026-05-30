@@ -10,6 +10,7 @@ interface ChatAreaProps {
   activeModelId: string;
   settings: AppSettings;
   generating: boolean;
+  queuedMessage: string | null;
   cacheHitTokens: number;
   agentMode: AgentMode;
   thinkingLevel: ThinkingLevel;
@@ -33,6 +34,7 @@ export function ChatArea({
   activeModelId,
   settings,
   generating,
+  queuedMessage,
   cacheHitTokens,
   agentMode,
   thinkingLevel,
@@ -72,6 +74,12 @@ export function ChatArea({
       {agentMode === 'plan' && (
         <div className="px-4 py-1.5 text-xs bg-blue-500/5 border-t border-blue-500/10 text-blue-400/80 text-center">
           计划模式 — AI 只能读取和分析，不会修改任何文件
+        </div>
+      )}
+
+      {queuedMessage && (
+        <div className="px-4 py-1.5 text-xs bg-amber-500/10 border-t border-amber-500/20 text-amber-400/80 text-center flex items-center justify-center gap-2">
+          📩 队列中 — AI 回复完成后自动发送下一轮
         </div>
       )}
 

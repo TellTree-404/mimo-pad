@@ -63,13 +63,8 @@ export function InputArea({
   const handleSend = () => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    if (generating) {
-      onCancel();
-      setTimeout(() => { onSend(trimmed); setText(''); }, 100);
-    } else {
-      onSend(trimmed);
-      setText('');
-    }
+    onSend(trimmed);
+    setText('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -101,7 +96,7 @@ export function InputArea({
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={generating ? '输入引导文本... (Enter 打断并发送)' : '输入消息... (Enter 发送)'}
+              placeholder={generating ? '排队中，Enter 追加到队列' : '输入消息... (Enter 发送)'}
               rows={1}
               className="w-full px-5 py-3.5 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-border)] resize-none text-base min-h-[52px] max-h-[160px]"
             />

@@ -60,6 +60,7 @@ function App() {
   const [agentMode, setAgentMode] = useState<AgentMode>('agent');
   const [thinkingLevel, setThinkingLevel] = useState<ThinkingLevel>('auto');
   const [yoloPending, setYoloPending] = useState(false);
+  const [queuedMessage, setQueuedMessage] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -161,6 +162,12 @@ function App() {
   }, []);
 
   const handleSend = useCallback(async (text: string) => {
+    if (generating) {
+      setQueuedMessage(text);
+      return;
+    }
+
+    setQueuedMessage(null);
     let convId = activeId;
     if (!convId) {
       convId = createConversation(settings.activeModelId, settings.activeProviderId, settings.defaultSystemPrompt);
@@ -430,6 +437,10 @@ function App() {
       });
     } finally {
       setGenerating(false);
+      const q = queuedMessage;
+      if (q) {
+        setTimeout(() => handleSend(q), 300);
+      }
     }
   }, [
     activeId,
@@ -510,6 +521,7 @@ function App() {
           activeModelId={settings.activeModelId}
           settings={settings}
           generating={generating}
+          queuedMessage={queuedMessage}
           cacheHitTokens={cacheInfo.hitTokens}
           agentMode={agentMode}
           thinkingLevel={thinkingLevel}
