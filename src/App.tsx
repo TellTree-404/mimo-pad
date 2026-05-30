@@ -432,9 +432,18 @@ function App() {
 
       saveSettings();
     } catch (e) {
-      updateMessage(convId, aiMsgId, {
-        error: e instanceof Error ? e.message : '请求失败，请检查网络和 API Key',
-      });
+      const errMsg = e instanceof Error ? e.message : '请求失败';
+      if (errMsg.includes('image') || errMsg.includes('图片')) {
+        updateMessage(convId, aiMsgId, {
+          content: `当前模型（${settings.activeModelId}）不支持图片输入。\n\n如果你需要分析图片，可以：\n1. 在设置中切换到 **MiMo V2.5 Pro**（支持图片理解）\n2. 描述图片内容，我帮你分析\n3. 用文字告诉我你想做什么\n\n需要我帮你做哪个？`,
+        });
+      } else if (errMsg.includes('aborted') || errMsg.includes('AbortError')) {
+        updateMessage(convId, aiMsgId, { content: '已停止生成。' });
+      } else {
+        updateMessage(convId, aiMsgId, {
+          content: `请求时遇到问题：\n\n> ${errMsg}\n\n这可能是网络波动或 API 临时故障。请重试或检查 API Key 是否正确。需要我帮你排查吗？`,
+        });
+      }
     } finally {
       setGenerating(false);
       const q = queuedMessage;

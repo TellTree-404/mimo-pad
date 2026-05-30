@@ -63,6 +63,12 @@ export function InputArea({
   const handleSend = () => {
     const trimmed = text.trim();
     if (!trimmed) return;
+
+    if (activeModel && !activeModel.supportsVision && trimmed.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i)) {
+      const confirmed = window.confirm('当前模型不支持图片输入。\n\nDeepSeek V4 是纯文本模型。\n要分析图片，请在设置中切换到 MiMo V2.5 Pro（支持图片）。\n\n是否仍然发送？');
+      if (!confirmed) return;
+    }
+
     onSend(trimmed);
     setText('');
   };
