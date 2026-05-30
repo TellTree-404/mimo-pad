@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Paperclip, ChevronDown } from 'lucide-react';
+import { Send, ChevronDown } from 'lucide-react';
 import type { ProviderConfig, AppSettings } from '../../types';
 import { estimateTokens } from '../../services/llm';
 import { VoiceInput } from './VoiceInput';
@@ -67,16 +67,20 @@ export function InputArea({
     }
   };
 
+  const handleVoiceActivate = useCallback(() => {
+    textareaRef.current?.blur();
+  }, []);
+
   return (
-    <div className="border-t border-[var(--border)] bg-[var(--bg-secondary)] p-3">
-      <div className="flex items-center gap-2 mb-2">
+    <div className="border-t border-[var(--border)] bg-[var(--bg-secondary)] px-4 py-3 pb-safe">
+      <div className="flex items-center gap-3 mb-2.5">
         <div className="relative">
           <button
             onClick={() => setShowModels(!showModels)}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-xs text-[var(--text-secondary)] hover:border-[var(--accent-border)] transition-colors"
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm text-[var(--text-secondary)] hover:border-[var(--accent-border)] transition-colors min-h-[42px]"
           >
-            <span className="max-w-[100px] truncate">{activeModel?.name || '选择模型'}</span>
-            <ChevronDown size={12} />
+            <span className="max-w-[120px] truncate">{activeModel?.name || '选择模型'}</span>
+            <ChevronDown size={14} />
           </button>
 
           {showModels && (
@@ -118,12 +122,13 @@ export function InputArea({
         </span>
       </div>
 
-      <div className="flex items-end gap-2">
+      <div className="flex items-end gap-3">
         <VoiceInput
           mode={settings.voiceInputMode}
           autoSend={settings.autoSendVoice}
           onResult={handleVoiceResult}
           onSend={handleVoiceSend}
+          onActivate={handleVoiceActivate}
         />
 
         <div className="flex-1 relative">
@@ -132,20 +137,20 @@ export function InputArea({
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="输入消息... (Enter 发送, Shift+Enter 换行)"
+            placeholder="输入消息... (Enter 发送)"
             rows={1}
             disabled={disabled}
-            className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-border)] resize-none text-sm min-h-[44px] max-h-[160px]"
+            className="w-full px-5 py-3.5 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-border)] resize-none text-base min-h-[50px] max-h-[180px]"
           />
         </div>
 
         <button
           onClick={handleSend}
           disabled={disabled || !text.trim()}
-          className="p-2.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-light)] disabled:opacity-40 disabled:cursor-not-allowed text-white transition-all active:scale-90"
+          className="p-3.5 rounded-2xl bg-[var(--accent)] hover:bg-[var(--accent-light)] disabled:opacity-40 disabled:cursor-not-allowed text-white transition-all active:scale-90 min-w-[50px] min-h-[50px]"
           title="发送"
         >
-          <Send size={20} />
+          <Send size={22} />
         </button>
       </div>
     </div>

@@ -66,10 +66,7 @@ function App() {
   }, [settingsLoaded]);
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', settings.theme === 'system'
-      ? window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-      : settings.theme
-    );
+    document.documentElement.setAttribute('data-theme', settings.theme);
     document.documentElement.style.fontSize = settings.fontSize + 'px';
   }, [settings.theme, settings.fontSize]);
 
@@ -379,7 +376,11 @@ function App() {
   const providers = getEffectiveProviders();
 
   return (
-    <div className="flex h-full bg-[var(--bg-primary)]">
+    <div className="flex h-full bg-[var(--bg-primary)]" style={settings.backgroundImage ? {
+      backgroundImage: `url(${settings.backgroundImage})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    } : undefined}>
       <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(false)} onSettings={() => setSettingsOpen(true)}>
         <ConversationList
           conversations={conversations}
@@ -404,9 +405,9 @@ function App() {
         {!sidebarOpen && (
           <button
             onClick={() => setSidebarOpen(true)}
-            className="absolute top-3 left-3 z-20 p-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            className="absolute top-3 left-3 z-20 p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors min-w-[48px] min-h-[48px]"
           >
-            <Menu size={20} />
+            <Menu size={24} />
           </button>
         )}
 
@@ -431,6 +432,8 @@ function App() {
         onUpdateProvider={updateProvider}
         onSetApiKey={setApiKey}
         onSetActiveModel={setActiveModel}
+        onAddProvider={(p) => { updateSettings({ providers: [...settings.providers, p] }); }}
+        onRemoveProvider={(id) => { updateSettings({ providers: settings.providers.filter((p: ProviderConfig) => p.id !== id) }); }}
         onAddMcp={addMcpServer}
         onToggleMcp={toggleMcp}
         onRemoveMcp={removeMcpServer}

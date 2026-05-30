@@ -15,6 +15,8 @@ interface SettingsPanelProps {
   onUpdateProvider: (id: string, partial: Partial<ProviderConfig>) => void;
   onSetApiKey: (id: string, key: string) => void;
   onSetActiveModel: (providerId: string, modelId: string) => void;
+  onAddProvider: (provider: ProviderConfig) => void;
+  onRemoveProvider: (id: string) => void;
   onAddMcp: (server: McpServerConfig) => void;
   onToggleMcp: (id: string) => void;
   onRemoveMcp: (id: string) => void;
@@ -33,6 +35,8 @@ export function SettingsPanel({
   onUpdateProvider,
   onSetApiKey,
   onSetActiveModel,
+  onAddProvider,
+  onRemoveProvider,
   onAddMcp,
   onToggleMcp,
   onRemoveMcp,
@@ -91,7 +95,7 @@ export function SettingsPanel({
           ))}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-5">
           {tab === 'models' && (
             <ModelConfig
               providers={settings.providers}
@@ -100,6 +104,8 @@ export function SettingsPanel({
               onUpdateProvider={onUpdateProvider}
               onSetApiKey={onSetApiKey}
               onSetActiveModel={onSetActiveModel}
+              onAddProvider={onAddProvider}
+              onRemoveProvider={onRemoveProvider}
             />
           )}
 
@@ -136,69 +142,103 @@ export function SettingsPanel({
           )}
 
           {tab === 'appearance' && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">外观设置</h3>
+            <div className="space-y-5">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">外观设置</h3>
 
               <div>
-                <label className="text-xs text-[var(--text-muted)]">主题</label>
-                <div className="flex gap-2 mt-1">
-                  {(['dark', 'light', 'system'] as const).map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => onUpdate({ theme: t })}
-                      className={`flex-1 py-2 rounded-lg text-xs border transition-colors ${
-                        settings.theme === t
-                          ? 'border-[var(--accent-border)] bg-[var(--accent-bg)] text-[var(--accent-light)]'
-                          : 'border-[var(--border)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)]'
-                      }`}
-                    >
-                      {t === 'dark' ? '深色' : t === 'light' ? '浅色' : '跟随系统'}
-                    </button>
-                  ))}
+                <label className="text-sm text-[var(--text-muted)]">主题</label>
+                <div className="flex gap-3 mt-2">
+                  <button
+                    onClick={() => onUpdate({ theme: 'dark' })}
+                    className={`flex-1 py-4 rounded-xl text-sm border-2 transition-colors min-h-[56px] ${
+                      settings.theme === 'dark'
+                        ? 'border-[var(--accent-border)] bg-[var(--accent-bg)] text-[var(--accent-light)]'
+                        : 'border-[var(--border)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)]'
+                    }`}
+                  >
+                    <div className="text-base font-medium">深色模式</div>
+                    <div className="text-xs mt-0.5 opacity-60">黑底白字</div>
+                  </button>
+                  <button
+                    onClick={() => onUpdate({ theme: 'parchment' })}
+                    className={`flex-1 py-4 rounded-xl text-sm border-2 transition-colors min-h-[56px] ${
+                      settings.theme === 'parchment'
+                        ? 'border-[var(--accent-border)] bg-[var(--accent-bg)] text-[var(--accent-light)]'
+                        : 'border-[var(--border)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)]'
+                    }`}
+                  >
+                    <div className="text-base font-medium">护眼模式</div>
+                    <div className="text-xs mt-0.5 opacity-60">羊皮纸色</div>
+                  </button>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs text-[var(--text-muted)]">字体大小: {settings.fontSize}px</label>
+                <label className="text-sm text-[var(--text-muted)]">字体: {settings.fontSize}px</label>
                 <input
                   type="range"
-                  min={12}
-                  max={24}
+                  min={14}
+                  max={22}
                   step={1}
                   value={settings.fontSize}
                   onChange={(e) => onUpdate({ fontSize: Number(e.target.value) })}
-                  className="w-full mt-1 accent-[var(--accent)]"
+                  className="w-full mt-2 accent-[var(--accent)] h-2"
                 />
+                <div className="flex justify-between text-xs text-[var(--text-muted)]">
+                  <span>A</span><span className="text-lg">A</span>
+                </div>
               </div>
 
               <div>
-                <label className="text-xs text-[var(--text-muted)]">语音输入模式</label>
-                <div className="flex gap-2 mt-1">
+                <label className="text-sm text-[var(--text-muted)]">语音模式</label>
+                <div className="flex gap-3 mt-2">
                   {(['toggle', 'hold'] as const).map((m) => (
                     <button
                       key={m}
                       onClick={() => onUpdate({ voiceInputMode: m })}
-                      className={`flex-1 py-2 rounded-lg text-xs border transition-colors ${
+                      className={`flex-1 py-4 rounded-xl text-sm border-2 transition-colors min-h-[56px] ${
                         settings.voiceInputMode === m
                           ? 'border-[var(--accent-border)] bg-[var(--accent-bg)] text-[var(--accent-light)]'
                           : 'border-[var(--border)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)]'
                       }`}
                     >
-                      {m === 'toggle' ? '点击切换' : '按住说话'}
+                      <div className="text-base font-medium">{m === 'toggle' ? '点击切换' : '按住说话'}</div>
+                      <div className="text-xs mt-0.5 opacity-60">{m === 'toggle' ? '点开始/停止' : '长按录音'}</div>
                     </button>
                   ))}
                 </div>
               </div>
 
-              <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+              <label className="flex items-center gap-3 text-sm text-[var(--text-secondary)] min-h-[48px]">
                 <input
                   type="checkbox"
                   checked={settings.autoSendVoice}
                   onChange={(e) => onUpdate({ autoSendVoice: e.target.checked })}
-                  className="accent-[var(--accent)]"
+                  className="accent-[var(--accent)] scale-125"
                 />
-                语音识别完成后自动发送
+                语音输入后自动发送
               </label>
+
+              <div>
+                <label className="text-sm text-[var(--text-muted)]">背景图片 URL</label>
+                <div className="flex gap-2 mt-2">
+                  <input
+                    type="text"
+                    value={settings.backgroundImage || ''}
+                    onChange={(e) => onUpdate({ backgroundImage: e.target.value || undefined })}
+                    placeholder="留空使用纯色背景..."
+                    className="flex-1 px-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-border)] min-h-[48px]"
+                  />
+                  {settings.backgroundImage && (
+                    <button
+                      onClick={() => onUpdate({ backgroundImage: undefined })}
+                      className="px-4 py-3 rounded-xl bg-red-500/10 text-red-400 text-sm hover:bg-red-500/20"
+                    >
+                      清除
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 

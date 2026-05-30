@@ -45,9 +45,9 @@ export function ConversationList({
         </div>
         <button
           onClick={onCreate}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-light)] text-white font-medium transition-colors text-sm active:scale-95"
+          className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-light)] text-white font-semibold transition-colors text-base active:scale-95 min-h-[50px]"
         >
-          <MessageSquarePlus size={18} />
+          <MessageSquarePlus size={20} />
           新建对话
         </button>
       </div>
@@ -64,7 +64,7 @@ export function ConversationList({
           >
             <button
               onClick={() => onSelect(conv.id)}
-              className={`w-full text-left px-3 py-2.5 rounded-lg mb-1 transition-colors text-sm truncate block ${
+              className={`w-full text-left px-4 py-3 rounded-xl mb-1 transition-colors text-sm truncate block ${
                 conv.id === activeId
                   ? 'bg-[var(--accent-bg)] text-[var(--accent-light)]'
                   : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'

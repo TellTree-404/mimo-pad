@@ -85,7 +85,8 @@ export interface MemoryEntry {
 }
 
 export interface AppSettings {
-  theme: 'light' | 'dark' | 'system';
+  theme: 'dark' | 'parchment';
+  backgroundImage?: string;
   fontSize: number;
   language: 'zh' | 'en';
   voiceInputMode: 'hold' | 'toggle';
