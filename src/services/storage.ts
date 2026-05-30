@@ -169,6 +169,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
   thinkingLevel: 'auto',
   agentMode: 'agent',
+  backgroundImage: undefined,
   fontSize: 16,
   language: 'zh',
   voiceInputMode: 'toggle',

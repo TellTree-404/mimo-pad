@@ -339,11 +339,13 @@ export function SettingsPanel({
           )}
         </div>
 
-        <div className="p-4 border-t border-[var(--border)] text-center space-y-2">
-          <span className="text-[10px] text-[var(--text-muted)]">
-            MiMo Pad Agent v2.0 · 数据主权完全由你掌控
-          </span>
-          <UpdateChecker />
+        <div className="shrink-0 p-4 border-t border-[var(--border)] text-center space-y-2 bg-[var(--bg-secondary)]">
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <span className="text-xs text-[var(--text-muted)]">
+              MiMo Pad Agent v2.0
+            </span>
+            <UpdateChecker />
+          </div>
         </div>
       </div>
     </div>

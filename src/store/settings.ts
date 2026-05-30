@@ -57,6 +57,13 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     set((s) => ({
       settings: { ...s.settings, ...partial },
     }));
+    const { settings } = get();
+    const toSave = { ...settings };
+    for (const p of toSave.providers) {
+      storage.saveApiKey(p.id, p.apiKey);
+    }
+    const cleaned = { ...toSave, providers: toSave.providers.map((p) => ({ ...p, apiKey: '' })) };
+    storage.saveSettings(cleaned);
   },
 
   updateProvider(id, partial) {

@@ -60,19 +60,19 @@ export function UpdateChecker() {
 
   if (status === 'checking') {
     return (
-      <div className="flex items-center justify-center gap-1.5 text-[10px] text-[var(--text-muted)]">
-        <RefreshCw size={10} className="animate-spin" />
-        检查更新...
-      </div>
+      <span className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+        <RefreshCw size={12} className="animate-spin" />
+        检查中...
+      </span>
     );
   }
 
   if (status === 'uptodate') {
     return (
-      <div className="flex items-center justify-center gap-1 text-[10px] text-green-500">
-        <Check size={10} />
-        已是最新 v{CURRENT_VERSION}
-      </div>
+      <span className="flex items-center gap-1 text-xs text-green-500 font-medium">
+        <Check size={12} />
+        已是最新
+      </span>
     );
   }
 
@@ -80,9 +80,9 @@ export function UpdateChecker() {
     return (
       <button
         onClick={handleUpdate}
-        className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-medium hover:bg-[var(--accent-light)] transition-colors w-full max-w-[200px] mx-auto"
+        className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-sm font-semibold hover:bg-[var(--accent-light)] transition-colors animate-pulse-shadow"
       >
-        <Download size={14} />
+        <Download size={16} />
         更新至 v{latestVersion}
       </button>
     );
