@@ -218,7 +218,7 @@ function App() {
           if (!existingSystem) {
             const msgWithMemory = settings.defaultSystemPrompt
               ? settings.defaultSystemPrompt + memCtx
-              : 'You are an AI coding assistant.' + memCtx;
+              : `You are an AI coding assistant.\n当前使用模型: ${settings.activeModelId} | 提供商: ${activeProvider.name} | 思考强度: ${thinkingLevel === 'auto' ? '自动' : thinkingLevel}\n` + memCtx;
             allMessages = [{ id: 'system-1', role: 'system', content: msgWithMemory, timestamp: 0 }, ...allMessages];
           }
         }
@@ -487,7 +487,8 @@ function App() {
         {!sidebarOpen && (
           <button
             onClick={() => setSidebarOpen(true)}
-            className="absolute top-3 left-3 z-20 p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors min-w-[48px] min-h-[48px]"
+            className="absolute z-20 p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors min-w-[52px] min-h-[52px]"
+            style={{ top: 'max(12px, env(safe-area-inset-top))', left: '12px' }}
           >
             <Menu size={24} />
           </button>
