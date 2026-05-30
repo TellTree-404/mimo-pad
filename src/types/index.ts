@@ -152,6 +152,7 @@ export interface LLMChatParams {
   topP?: number;
   stream?: boolean;
   reasoningEffort?: string;
+  signal?: AbortSignal;
 }
 
 export interface StreamChunk {

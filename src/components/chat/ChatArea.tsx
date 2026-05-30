@@ -14,6 +14,7 @@ interface ChatAreaProps {
   agentMode: AgentMode;
   thinkingLevel: ThinkingLevel;
   onSend: (text: string) => void;
+  onCancel: () => void;
   onModelChange: (providerId: string, modelId: string) => void;
   onModeChange: (mode: AgentMode) => void;
   onThinkingChange: (level: ThinkingLevel) => void;
@@ -36,6 +37,7 @@ export function ChatArea({
   agentMode,
   thinkingLevel,
   onSend,
+  onCancel,
   onModelChange,
   onModeChange,
   onThinkingChange,
@@ -85,9 +87,11 @@ export function ChatArea({
         activeProviderId={activeProviderId}
         activeModelId={activeModelId}
         settings={settings}
-        disabled={generating}
+        disabled={false}
+        generating={generating}
         thinkingLevel={thinkingLevel}
         onSend={onSend}
+        onCancel={onCancel}
         onModelChange={onModelChange}
         onThinkingChange={onThinkingChange}
       />

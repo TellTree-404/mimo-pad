@@ -273,7 +273,7 @@ export async function* chatCompletion(params: LLMChatParams): AsyncGenerator<Str
     method: 'POST',
     headers,
     body,
-    signal: params.stream ? undefined : undefined,
+    signal: params.signal,
   });
 
   if (!response.ok) {

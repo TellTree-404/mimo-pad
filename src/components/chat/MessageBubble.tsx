@@ -3,11 +3,12 @@ import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeRaw from 'rehype-raw';
 import { Copy, Check, Brain, Wrench } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import type { ChatMessage } from '../../types';
 
 interface MessageBubbleProps {
   message: ChatMessage;
+  onCopy?: (text: string) => void;
 }
 
 function CodeBlock({ children, className }: { children?: React.ReactNode; className?: string }) {
@@ -44,10 +45,19 @@ function CodeBlock({ children, className }: { children?: React.ReactNode; classN
   );
 }
 
-export function MessageBubble({ message }: MessageBubbleProps) {
+export function MessageBubble({ message, onCopy }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
   const isTool = message.role === 'tool';
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(message.content).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+    onCopy?.(message.content);
+  }, [message.content, onCopy]);
 
   if (isSystem) return null;
 
@@ -69,11 +79,27 @@ export function MessageBubble({ message }: MessageBubbleProps) {
             <div className="whitespace-pre-wrap break-all text-xs">{message.content.slice(0, 500)}{message.content.length > 500 ? '...' : ''}</div>
           </div>
         ) : isUser ? (
-          <div className="px-4 py-2.5 rounded-2xl rounded-br-md bg-[var(--accent)] text-white">
-            <div className="whitespace-pre-wrap break-words">{message.content}</div>
+          <div className="group relative">
+            <div className="px-4 py-2.5 rounded-2xl rounded-br-md bg-[var(--accent)] text-white">
+              <div className="whitespace-pre-wrap break-words">{message.content}</div>
+            </div>
+            <button
+              onClick={handleCopy}
+              className="absolute -top-1 -left-1 p-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] opacity-0 group-hover:opacity-100 active:opacity-100 transition-opacity text-[var(--text-muted)] hover:text-[var(--accent-light)]"
+              title="复制"
+            >
+              {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+            </button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 group relative">
+            <button
+              onClick={handleCopy}
+              className="absolute -top-1 -right-1 p-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] opacity-0 group-hover:opacity-100 active:opacity-100 transition-opacity text-[var(--text-muted)] hover:text-[var(--accent-light)]"
+              title="复制"
+            >
+              {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+            </button>
             {message.reasoning && (
               <details className="text-sm">
                 <summary className="text-[var(--text-muted)] cursor-pointer hover:text-[var(--text-secondary)]">

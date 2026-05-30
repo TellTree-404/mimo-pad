@@ -150,6 +150,11 @@ function App() {
     }
   }, []);
 
+  const handleCancel = useCallback(() => {
+    abortRef.current?.abort();
+    setGenerating(false);
+  }, []);
+
   const handleYoloConfirm = useCallback(() => {
     setYoloPending(false);
     setAgentMode('yolo');
@@ -160,6 +165,9 @@ function App() {
     if (!convId) {
       convId = createConversation(settings.activeModelId, settings.activeProviderId, settings.defaultSystemPrompt);
     }
+
+    const abortController = new AbortController();
+    abortRef.current = abortController;
 
     const userMsg: ChatMessage = {
       id: nanoid(),
@@ -265,6 +273,7 @@ function App() {
           temperature: 0.7,
           stream: true,
           reasoningEffort: thinkingLevel,
+          signal: abortController.signal,
         });
 
         for await (const chunk of stream) {
@@ -505,6 +514,7 @@ function App() {
           agentMode={agentMode}
           thinkingLevel={thinkingLevel}
           onSend={handleSend}
+          onCancel={handleCancel}
           onModelChange={setActiveModel}
           onModeChange={handleModeChange}
           onThinkingChange={setThinkingLevel}

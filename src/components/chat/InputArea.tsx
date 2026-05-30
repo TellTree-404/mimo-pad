@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, ChevronDown } from 'lucide-react';
+import { Send, ChevronDown, Square } from 'lucide-react';
 import type { ProviderConfig, AppSettings, ThinkingLevel } from '../../types';
 import { estimateTokens } from '../../services/llm';
 import { VoiceInput } from './VoiceInput';
@@ -10,8 +10,10 @@ interface InputAreaProps {
   activeModelId: string;
   settings: AppSettings;
   disabled: boolean;
+  generating: boolean;
   thinkingLevel: ThinkingLevel;
   onSend: (text: string) => void;
+  onCancel: () => void;
   onModelChange: (providerId: string, modelId: string) => void;
   onThinkingChange: (level: ThinkingLevel) => void;
 }
@@ -31,8 +33,10 @@ export function InputArea({
   activeModelId,
   settings,
   disabled,
+  generating,
   thinkingLevel,
   onSend,
+  onCancel,
   onModelChange,
   onThinkingChange,
 }: InputAreaProps) {
@@ -58,9 +62,14 @@ export function InputArea({
 
   const handleSend = () => {
     const trimmed = text.trim();
-    if (!trimmed || disabled) return;
-    onSend(trimmed);
-    setText('');
+    if (!trimmed) return;
+    if (generating) {
+      onCancel();
+      setTimeout(() => { onSend(trimmed); setText(''); }, 100);
+    } else {
+      onSend(trimmed);
+      setText('');
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -92,21 +101,30 @@ export function InputArea({
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="输入消息... (Enter 发送)"
+              placeholder={generating ? '输入引导文本... (Enter 打断并发送)' : '输入消息... (Enter 发送)'}
               rows={1}
-              disabled={disabled}
               className="w-full px-5 py-3.5 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-border)] resize-none text-base min-h-[52px] max-h-[160px]"
             />
           </div>
 
-          <button
-            onClick={handleSend}
-            disabled={disabled || !text.trim()}
-            className="p-4 rounded-2xl bg-[var(--accent)] hover:bg-[var(--accent-light)] disabled:opacity-40 disabled:cursor-not-allowed text-white transition-all active:scale-90 min-w-[52px] min-h-[52px]"
-            title="发送"
-          >
-            <Send size={22} />
-          </button>
+          {generating ? (
+            <button
+              onClick={onCancel}
+              className="p-4 rounded-2xl bg-red-600 hover:bg-red-500 text-white transition-all active:scale-90 min-w-[52px] min-h-[52px]"
+              title="停止生成"
+            >
+              <Square size={22} fill="currentColor" />
+            </button>
+          ) : (
+            <button
+              onClick={handleSend}
+              disabled={disabled || !text.trim()}
+              className="p-4 rounded-2xl bg-[var(--accent)] hover:bg-[var(--accent-light)] disabled:opacity-40 disabled:cursor-not-allowed text-white transition-all active:scale-90 min-w-[52px] min-h-[52px]"
+              title="发送"
+            >
+              <Send size={22} />
+            </button>
+          )}
         </div>
       </div>
 
