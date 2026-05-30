@@ -63,10 +63,10 @@ export function SettingsPanel({
     <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div
         className="w-full max-w-lg bg-[var(--bg-secondary)] h-full flex flex-col animate-slide-in-right"
-        style={{ animation: 'slideInRight 0.3s ease-out', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+        style={{ animation: 'slideInRight 0.3s ease-out' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
+        <div className="flex items-center justify-between p-4 border-b border-[var(--border)]" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">设置</h2>
           <button
             onClick={onClose}
@@ -93,7 +93,7 @@ export function SettingsPanel({
           ))}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
+        <div className="flex-1 overflow-y-auto p-5" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           {tab === 'models' && (
             <ModelConfig
               providers={settings.providers}
@@ -339,7 +339,7 @@ export function SettingsPanel({
           )}
         </div>
 
-        <div className="shrink-0 p-4 border-t border-[var(--border)] text-center space-y-2 bg-[var(--bg-secondary)]" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
+        <div className="shrink-0 p-4 border-t border-[var(--border)] text-center space-y-2 bg-[var(--bg-secondary)]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <span className="text-xs text-[var(--text-muted)]">
               MiMo Pad Agent v2.0

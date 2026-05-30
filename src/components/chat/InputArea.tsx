@@ -85,7 +85,7 @@ export function InputArea({
   const handleVoiceActivate = useCallback(() => { textareaRef.current?.blur(); }, []);
 
   return (
-    <div className="border-t border-[var(--border)] bg-[var(--bg-secondary)]" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+    <div className="border-t border-[var(--border)] bg-[var(--bg-secondary)]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <div className="px-4 pt-3 pb-2">
         <div className="flex items-end gap-3">
           <VoiceInput
