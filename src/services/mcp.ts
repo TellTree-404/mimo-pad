@@ -44,6 +44,43 @@ const BUILTIN_TOOLS: Record<string, { description: string; inputSchema: Record<s
       required: ['code'],
     },
   },
+  github_get_file: {
+    description: 'Fetch a file from a public GitHub repository. Returns file content.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        owner: { type: 'string', description: 'GitHub username or organization' },
+        repo: { type: 'string', description: 'Repository name' },
+        path: { type: 'string', description: 'File path within the repo (e.g. README.md)' },
+        branch: { type: 'string', description: 'Branch name (default: main)' },
+      },
+      required: ['owner', 'repo', 'path'],
+    },
+  },
+  github_search_skills: {
+    description: 'Search GitHub for skill files (.md) by topic or keyword. Great for finding AI agent skills.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Search query (e.g. "react component skill" or "opencode skills")' },
+        maxResults: { type: 'number', description: 'Max results (default 10)' },
+      },
+      required: ['query'],
+    },
+  },
+  github_list_dir: {
+    description: 'List files in a directory of a GitHub repository.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        owner: { type: 'string', description: 'GitHub username or organization' },
+        repo: { type: 'string', description: 'Repository name' },
+        path: { type: 'string', description: 'Directory path (default: root)' },
+        branch: { type: 'string', description: 'Branch name (default: main)' },
+      },
+      required: ['owner', 'repo'],
+    },
+  },
 };
 
 interface McpClientConnection {
@@ -259,6 +296,61 @@ class McpManager {
             toolCallId,
             content: `Execution error: ${e instanceof Error ? e.message : String(e)}`,
           };
+        }
+      }
+
+      case 'github_get_file': {
+        const { owner, repo, path: ghPath, branch = 'main' } = args as Record<string, string>;
+        try {
+          const resp = await fetch(
+            `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${ghPath}`
+          );
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const content = await resp.text();
+          return { toolCallId, content };
+        } catch (e) {
+          throw new Error(`GitHub fetch failed: ${e instanceof Error ? e.message : String(e)}`);
+        }
+      }
+
+      case 'github_list_dir': {
+        const { owner, repo, path: ghDirPath = '', branch: ghBranch = 'main' } = args as Record<string, string>;
+        try {
+          const apiPath = ghDirPath ? `contents/${ghDirPath}` : 'contents';
+          const resp = await fetch(
+            `https://api.github.com/repos/${owner}/${repo}/${apiPath}?ref=${ghBranch}`
+          );
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const items = await resp.json() as { name: string; type: string; path: string; size: number }[];
+          const listing = Array.isArray(items) ? items.map((i) =>
+            `${i.type === 'dir' ? '📁' : '📄'} ${i.path}${i.type === 'file' ? ` (${i.size} B)` : ''}`
+          ).join('\n') : 'Not a directory';
+          return { toolCallId, content: listing || 'Empty directory' };
+        } catch (e) {
+          throw new Error(`GitHub list failed: ${e instanceof Error ? e.message : String(e)}`);
+        }
+      }
+
+      case 'github_search_skills': {
+        const { query, maxResults = 10 } = args as Record<string, unknown>;
+        try {
+          const resp = await fetch(
+            `https://api.github.com/search/repositories?q=${encodeURIComponent(String(query))}+topic:skills&sort=stars&per_page=${maxResults}`
+          );
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const data = await resp.json() as { items?: { full_name: string; description: string; html_url: string; stargazers_count: number }[] };
+          const repos = data.items || [];
+          const results = repos.map((r) =>
+            `- **${r.full_name}** ⭐${r.stargazers_count}\n  ${r.description || 'No description'}\n  ${r.html_url}`
+          );
+          return {
+            toolCallId,
+            content: results.length > 0
+              ? `Found ${results.length} repos:\n\n${results.join('\n\n')}`
+              : `No repos found for "${query}"`,
+          };
+        } catch (e) {
+          throw new Error(`GitHub search failed: ${e instanceof Error ? e.message : String(e)}`);
         }
       }
 

@@ -99,6 +99,17 @@ export interface AppSettings {
   maxMemoryEntries: number;
   maxContextTokens: number;
   defaultSystemPrompt: string;
+  githubToken?: string;
+}
+
+export interface ExportedSkill {
+  id: string;
+  name: string;
+  description: string;
+  content: string;
+  source?: string;
+  installedAt: number;
+  enabled: boolean;
 }
 
 export interface LLMChatParams {

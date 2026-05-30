@@ -1,7 +1,7 @@
-import type { Conversation, AppSettings, MemoryEntry, ProviderConfig } from '../types';
+import type { Conversation, AppSettings, MemoryEntry, ProviderConfig, ExportedSkill } from '../types';
 
 const DB_NAME = 'mimo-pad-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -13,6 +13,9 @@ function openDB(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains('memory')) {
         db.createObjectStore('memory', { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains('skills')) {
+        db.createObjectStore('skills', { keyPath: 'id' });
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -62,6 +65,17 @@ export const storage = {
   },
   async clearMemory(): Promise<void> {
     await dbOp('memory', 'readwrite', (s) => s.clear());
+  },
+
+  async getAllSkills(): Promise<ExportedSkill[]> {
+    try { return await dbOp('skills', 'readonly', (s) => s.getAll()); }
+    catch { return []; }
+  },
+  async saveSkill(skill: ExportedSkill): Promise<void> {
+    await dbOp('skills', 'readwrite', (s) => s.put(skill));
+  },
+  async deleteSkill(id: string): Promise<void> {
+    await dbOp('skills', 'readwrite', (s) => s.delete(id));
   },
   getSettings(): AppSettings | null {
     try {

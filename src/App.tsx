@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Menu, PanelLeft } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import { useSettingsStore } from './store/settings';
 import { useConversationStore } from './store/conversation';
@@ -7,6 +7,7 @@ import { useMcpStore } from './store/mcp';
 import { chatCompletion, estimateTokens } from './services/llm';
 import { mcpManager, getToolsForProvider } from './services/mcp';
 import { buildMemoryContext, extractKeyInsights, manageContextWindow } from './services/memory';
+import { storage } from './services/storage';
 import { Sidebar } from './components/sidebar/Sidebar';
 import { ConversationList } from './components/sidebar/ConversationList';
 import { ChatArea } from './components/chat/ChatArea';
@@ -57,6 +58,10 @@ function App() {
   }, []);
 
   useEffect(() => {
+    loadSoulAndSkills();
+  }, [settingsLoaded]);
+
+  useEffect(() => {
     if (settingsLoaded) {
       const connected = settings.mcpServers.filter((s) => s.enabled);
       for (const srv of connected) {
@@ -80,6 +85,27 @@ function App() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const loadSoulAndSkills = useCallback(async () => {
+    let base = '';
+    try {
+      const resp = await fetch('/soul.md');
+      if (resp.ok) base = await resp.text();
+    } catch {}
+
+    const skills = await storage.getAllSkills();
+    const enabled = skills.filter((s) => s.enabled);
+    if (enabled.length > 0) {
+      base += '\n\n## 已加载技能\n';
+      for (const skill of enabled) {
+        base += `\n### ${skill.name}\n${skill.content}\n`;
+      }
+    }
+
+    if (base) {
+      updateSettings({ defaultSystemPrompt: base });
+    }
+  }, [settingsLoaded]);
 
   const getEffectiveProviders = useCallback(() => {
     return settings.providers.map((p: ProviderConfig) => ({

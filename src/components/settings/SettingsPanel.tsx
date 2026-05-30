@@ -1,9 +1,10 @@
-import { X, Cpu, Wrench, Brain, Palette, Shield, Trash2, Download, FolderOpen } from 'lucide-react';
+import { X, Cpu, Wrench, Brain, Palette, Shield, Trash2, Download, FolderOpen, Puzzle } from 'lucide-react';
 import { useState } from 'react';
 import type { AppSettings, ProviderConfig, McpServerConfig } from '../../types';
 import { ModelConfig } from './ModelConfig';
 import { McpPanel } from './McpPanel';
 import { MemoryPanel } from './MemoryPanel';
+import { SkillsPanel } from './SkillsPanel';
 import { mcpManager } from '../../services/mcp';
 
 interface SettingsPanelProps {
@@ -24,7 +25,7 @@ interface SettingsPanelProps {
   onExport: () => void;
 }
 
-type SettingsTab = 'models' | 'mcp' | 'memory' | 'appearance' | 'privacy';
+type SettingsTab = 'models' | 'mcp' | 'skills' | 'memory' | 'appearance' | 'privacy';
 
 export function SettingsPanel({
   open,
@@ -51,6 +52,7 @@ export function SettingsPanel({
   const tabs: { key: SettingsTab; label: string; icon: typeof Cpu }[] = [
     { key: 'models', label: '模型', icon: Cpu },
     { key: 'mcp', label: 'MCP', icon: Wrench },
+    { key: 'skills', label: 'Skills', icon: Puzzle },
     { key: 'memory', label: '记忆', icon: Brain },
     { key: 'appearance', label: '外观', icon: Palette },
     { key: 'privacy', label: '安全', icon: Shield },
@@ -136,6 +138,8 @@ export function SettingsPanel({
               />
             </div>
           )}
+
+          {tab === 'skills' && <SkillsPanel />}
 
           {tab === 'memory' && (
             <MemoryPanel settings={settings} onUpdate={onUpdate} />
