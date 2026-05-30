@@ -1,7 +1,7 @@
 import type { Conversation, AppSettings, MemoryEntry, ProviderConfig, ExportedSkill } from '../types';
 
 const DB_NAME = 'mimo-pad-db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -16,6 +16,9 @@ function openDB(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains('skills')) {
         db.createObjectStore('skills', { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains('projects')) {
+        db.createObjectStore('projects', { keyPath: 'id' });
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -53,6 +56,7 @@ export const storage = {
   async deleteConversation(id: string): Promise<void> {
     await dbOp('conversations', 'readwrite', (s) => s.delete(id));
   },
+
   async getAllMemoryEntries(): Promise<MemoryEntry[]> {
     try { return await dbOp('memory', 'readonly', (s) => s.getAll()); }
     catch { return []; }
@@ -77,6 +81,18 @@ export const storage = {
   async deleteSkill(id: string): Promise<void> {
     await dbOp('skills', 'readwrite', (s) => s.delete(id));
   },
+
+  async getAllProjects(): Promise<Project[]> {
+    try { return await dbOp('projects', 'readonly', (s) => s.getAll()); }
+    catch { return []; }
+  },
+  async saveProject(project: Project): Promise<void> {
+    await dbOp('projects', 'readwrite', (s) => s.put(project));
+  },
+  async deleteProject(id: string): Promise<void> {
+    await dbOp('projects', 'readwrite', (s) => s.delete(id));
+  },
+
   getSettings(): AppSettings | null {
     try {
       const raw = localStorage.getItem('mimo-pad-settings');
@@ -99,6 +115,8 @@ export const storage = {
     indexedDB.deleteDatabase(DB_NAME);
   },
 };
+
+import type { Project } from '../types';
 
 export const DEFAULT_PROVIDERS: ProviderConfig[] = [
   {

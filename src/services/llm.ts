@@ -1,5 +1,16 @@
 import type { LLMChatParams, StreamChunk, ProviderConfig, ToolCall } from '../types';
 
+export interface CacheInfo {
+  hitTokens: number;
+  missTokens: number;
+}
+
+let onCacheUpdate: ((info: CacheInfo) => void) | null = null;
+
+export function setCacheUpdateHandler(handler: (info: CacheInfo) => void) {
+  onCacheUpdate = handler;
+}
+
 function buildOpenAIRequest(params: LLMChatParams): { url: string; headers: Record<string, string>; body: string } {
   const { provider, model, messages, systemPrompt, tools, toolChoice, maxTokens, temperature, topP, stream } = params;
   const url = `${provider.baseUrl}/chat/completions`;
@@ -111,6 +122,12 @@ async function* parseOpenAIStream(response: Response): AsyncGenerator<StreamChun
             completionTokens: parsed.usage.completion_tokens,
             totalTokens: parsed.usage.total_tokens,
           };
+          if (parsed.usage.prompt_cache_hit_tokens !== undefined) {
+            onCacheUpdate?.({
+              hitTokens: parsed.usage.prompt_cache_hit_tokens,
+              missTokens: parsed.usage.prompt_cache_miss_tokens ?? 0,
+            });
+          }
         }
         if (choice?.finish_reason) {
           chunk.finishReason = choice.finish_reason;

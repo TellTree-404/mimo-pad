@@ -4,7 +4,7 @@ import { nanoid } from 'nanoid';
 import { useSettingsStore } from './store/settings';
 import { useConversationStore } from './store/conversation';
 import { useMcpStore } from './store/mcp';
-import { chatCompletion, estimateTokens } from './services/llm';
+import { chatCompletion, estimateTokens, setCacheUpdateHandler, type CacheInfo as LLMCacheInfo } from './services/llm';
 import { mcpManager, getToolsForProvider } from './services/mcp';
 import { buildMemoryContext, extractKeyInsights, manageContextWindow } from './services/memory';
 import { storage } from './services/storage';
@@ -12,7 +12,7 @@ import { Sidebar } from './components/sidebar/Sidebar';
 import { ConversationList } from './components/sidebar/ConversationList';
 import { ChatArea } from './components/chat/ChatArea';
 import { SettingsPanel } from './components/settings/SettingsPanel';
-import type { ChatMessage, ToolCall, ProviderConfig, McpServerConfig } from './types';
+import type { ChatMessage, ToolCall, ProviderConfig, McpServerConfig, Project } from './types';
 
 function App() {
   const {
@@ -32,10 +32,13 @@ function App() {
 
   const {
     conversations,
+    projects,
     activeId,
     generating,
     loaded: convLoaded,
     load: loadConversations,
+    createProject,
+    deleteProject,
     create: createConversation,
     delete: deleteConversation,
     setActive: setActiveConversation,
@@ -44,17 +47,24 @@ function App() {
     setGenerating,
     getActive,
     exportConversation,
+    toggleMemorySharing,
   } = useConversationStore();
 
   const { connectedIds, connect, disconnect, toggle: toggleMcp } = useMcpStore();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
+  const [cacheInfo, setCacheInfo] = useState<LLMCacheInfo>({ hitTokens: 0, missTokens: 0 });
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     loadSettings();
     loadConversations();
+  }, []);
+
+  useEffect(() => {
+    setCacheUpdateHandler((info) => setCacheInfo(info));
   }, []);
 
   useEffect(() => {
@@ -116,10 +126,17 @@ function App() {
 
   const activeConv = conversations.find((c) => c.id === activeId);
 
-  const handleNewConversation = useCallback(() => {
-    createConversation(settings.activeModelId, settings.activeProviderId, settings.defaultSystemPrompt);
+  const handleNewConversation = useCallback((projectId?: string) => {
+    const p = projectId ? projects.find((pp: Project) => pp.id === projectId) : null;
+    createConversation(
+      settings.activeModelId,
+      settings.activeProviderId,
+      p?.systemPrompt || settings.defaultSystemPrompt,
+      projectId,
+      p ? p.memoryShared : true
+    );
     setSidebarOpen(false);
-  }, [settings.activeModelId, settings.activeProviderId, settings.defaultSystemPrompt]);
+  }, [settings.activeModelId, settings.activeProviderId, settings.defaultSystemPrompt, projects]);
 
   const handleSend = useCallback(async (text: string) => {
     let convId = activeId;
@@ -168,7 +185,7 @@ function App() {
       let allMessages = [...conv.messages];
 
       if (settings.memoryEnabled) {
-        const memCtx = await buildMemoryContext(conv.id);
+        const memCtx = await buildMemoryContext(conv.id, conv.projectId, conv.memoryShared);
         if (memCtx) {
           const existingSystem = allMessages.find((m: ChatMessage) => m.role === 'system');
           if (!existingSystem) {
@@ -364,7 +381,7 @@ function App() {
       if (settings.memoryEnabled) {
         const updatedConv = getActive();
         if (updatedConv) {
-          extractKeyInsights(updatedConv.messages, updatedConv.id).catch(() => {});
+          extractKeyInsights(updatedConv.messages, updatedConv.id, updatedConv.projectId, updatedConv.memoryShared).catch(() => {});
         }
       }
 
@@ -410,10 +427,14 @@ function App() {
       <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(false)} onSettings={() => setSettingsOpen(true)}>
         <ConversationList
           conversations={conversations}
+          projects={projects}
           activeId={activeId}
+          expandedProjects={expandedProjects}
           onSelect={(id) => { setActiveConversation(id); setSidebarOpen(false); }}
           onCreate={handleNewConversation}
+          onCreateProject={(name) => createProject(name)}
           onDelete={deleteConversation}
+          onDeleteProject={deleteProject}
           onExport={(id) => {
             const markdown = exportConversation(id);
             const blob = new Blob([markdown], { type: 'text/markdown' });
@@ -424,6 +445,12 @@ function App() {
             a.click();
             URL.revokeObjectURL(url);
           }}
+          onToggleExpand={(id) => setExpandedProjects((prev) => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+          })}
+          onToggleMemory={toggleMemorySharing}
         />
       </Sidebar>
 
@@ -444,6 +471,7 @@ function App() {
           activeModelId={settings.activeModelId}
           settings={settings}
           generating={generating}
+          cacheHitTokens={cacheInfo.hitTokens}
           onSend={handleSend}
           onModelChange={setActiveModel}
         />

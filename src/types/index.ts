@@ -36,6 +36,30 @@ export interface Conversation {
   updatedAt: number;
   memorySummary?: string;
   memoryEntries?: string[];
+  projectId?: string;
+  memoryShared: boolean;
+}
+
+export type MemoryScope = 'global' | 'project' | 'conversation';
+
+export interface MemoryEntry {
+  id: string;
+  content: string;
+  timestamp: number;
+  importance: number;
+  conversationId?: string;
+  projectId?: string;
+  scope: MemoryScope;
+  tags?: string[];
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  systemPrompt: string;
+  createdAt: number;
+  memoryShared: boolean;
 }
 
 export type ProviderType = 'openai' | 'anthropic' | 'mimo' | 'deepseek' | 'custom';
