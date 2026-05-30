@@ -1,10 +1,11 @@
-import { X, Cpu, Wrench, Brain, Palette, Shield, Trash2, Download, FolderOpen, Puzzle } from 'lucide-react';
+import { X, Cpu, Wrench, Brain, Palette, Shield, Trash2, Download, Puzzle } from 'lucide-react';
 import { useState } from 'react';
 import type { AppSettings, ProviderConfig, McpServerConfig } from '../../types';
 import { ModelConfig } from './ModelConfig';
 import { McpPanel } from './McpPanel';
 import { MemoryPanel } from './MemoryPanel';
 import { SkillsPanel } from './SkillsPanel';
+import { UpdateChecker } from './UpdateChecker';
 import { mcpManager } from '../../services/mcp';
 
 interface SettingsPanelProps {
@@ -57,11 +58,6 @@ export function SettingsPanel({
     { key: 'appearance', label: '外观', icon: Palette },
     { key: 'privacy', label: '安全', icon: Shield },
   ];
-
-  const handlePickDir = async () => {
-    const dir = await mcpManager.pickDirectory();
-    if (dir) setWorkDir(dir);
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm" onClick={onClose}>
@@ -119,18 +115,10 @@ export function SettingsPanel({
                   <input
                     type="text"
                     value={workDir || ''}
-                    onChange={(e) => setWorkDir(e.target.value)}
-                    onBlur={() => { if (workDir) mcpManager.setWorkDir?.(workDir); }}
+                    onChange={(e) => { setWorkDir(e.target.value); mcpManager.setWorkDir(e.target.value); }}
                     placeholder="/storage/emulated/0/..."
                     className="flex-1 px-4 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-border)] min-h-[44px]"
                   />
-                  <button
-                    onClick={handlePickDir}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[var(--accent-bg)] text-[var(--accent-light)] text-sm hover:bg-[var(--accent-border)] transition-colors min-h-[44px]"
-                  >
-                    <FolderOpen size={16} />
-                    浏览
-                  </button>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {[
@@ -351,10 +339,11 @@ export function SettingsPanel({
           )}
         </div>
 
-        <div className="p-4 border-t border-[var(--border)] text-center">
+        <div className="p-4 border-t border-[var(--border)] text-center space-y-2">
           <span className="text-[10px] text-[var(--text-muted)]">
-            MiMo Pad v1.0 · 数据主权完全由你掌控
+            MiMo Pad Agent v2.0 · 数据主权完全由你掌控
           </span>
+          <UpdateChecker />
         </div>
       </div>
     </div>
