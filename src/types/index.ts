@@ -1,0 +1,145 @@
+export type MessageRole = 'user' | 'assistant' | 'system' | 'tool';
+
+export interface ToolCall {
+  id: string;
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
+export interface ToolResult {
+  toolCallId: string;
+  content: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: MessageRole;
+  content: string;
+  reasoning?: string;
+  toolCalls?: ToolCall[];
+  toolResults?: ToolResult[];
+  timestamp: number;
+  tokenCount?: number;
+  error?: string;
+}
+
+export interface Conversation {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  modelId: string;
+  providerId: string;
+  systemPrompt: string;
+  createdAt: number;
+  updatedAt: number;
+  memorySummary?: string;
+  memoryEntries?: string[];
+}
+
+export type ProviderType = 'openai' | 'anthropic' | 'mimo' | 'deepseek' | 'custom';
+
+export interface ProviderConfig {
+  id: string;
+  name: string;
+  type: ProviderType;
+  baseUrl: string;
+  apiKey: string;
+  models: ModelConfig[];
+  authHeader: string;
+  authPrefix: string;
+}
+
+export interface ModelConfig {
+  id: string;
+  name: string;
+  maxTokens: number;
+  supportsStreaming: boolean;
+  supportsTools: boolean;
+  supportsVision: boolean;
+  supportsReasoning: boolean;
+}
+
+export type McpServerType = 'stdio' | 'sse' | 'builtin';
+
+export interface McpServerConfig {
+  id: string;
+  name: string;
+  type: McpServerType;
+  command?: string;
+  args?: string[];
+  url?: string;
+  enabled: boolean;
+  autoApprove: boolean;
+  env?: Record<string, string>;
+}
+
+export interface MemoryEntry {
+  id: string;
+  content: string;
+  timestamp: number;
+  importance: number;
+  conversationId?: string;
+  tags?: string[];
+}
+
+export interface AppSettings {
+  theme: 'light' | 'dark' | 'system';
+  fontSize: number;
+  language: 'zh' | 'en';
+  voiceInputMode: 'hold' | 'toggle';
+  autoSendVoice: boolean;
+  providers: ProviderConfig[];
+  activeProviderId: string;
+  activeModelId: string;
+  mcpServers: McpServerConfig[];
+  memoryEnabled: boolean;
+  maxMemoryEntries: number;
+  maxContextTokens: number;
+  defaultSystemPrompt: string;
+}
+
+export interface LLMChatParams {
+  provider: ProviderConfig;
+  model: string;
+  messages: { role: string; content: string; reasoning_content?: string; tool_calls?: unknown[]; tool_call_id?: string }[];
+  systemPrompt?: string;
+  tools?: unknown[];
+  toolChoice?: string;
+  maxTokens?: number;
+  temperature?: number;
+  topP?: number;
+  stream?: boolean;
+}
+
+export interface StreamChunk {
+  content?: string;
+  reasoning?: string;
+  toolCalls?: ToolCall[];
+  finishReason?: string;
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+}
+
+export interface McpTool {
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+}
+
+export type McpResource = {
+  uri: string;
+  name: string;
+  description?: string;
+  mimeType?: string;
+};
+
+export interface McpPrompt {
+  name: string;
+  description?: string;
+  arguments?: { name: string; description?: string; required?: boolean }[];
+}
