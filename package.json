@@ -12,6 +12,9 @@
     "predeploy": "npm run build"
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/cli": "^8.3.4",
+    "@capacitor/core": "^8.3.4",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "highlight.js": "^11.11.1",
     "lucide-react": "^1.17.0",
