@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
     steps:
       - uses: actions/checkout@v4
 
@@ -21,15 +24,9 @@ jobs:
           java-version: '17'
 
       - name: Setup Android SDK
-        id: setup-android
         uses: android-actions/setup-android@v3
         with:
           packages: 'platforms;android-34 build-tools;34.0.0'
-
-      - name: Prepare Gradle
-        run: |
-          echo "android.useAndroidX=true" >> $GITHUB_ENV
-          echo "org.gradle.jvmargs=-Xmx2048m" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: npm ci
@@ -44,10 +41,13 @@ jobs:
         run: npx cap sync android
 
       - name: Build APK
-        run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
         env:
-          ANDROID_HOME: ${{ steps.setup-android.outputs.android-home }}
-          ANDROID_SDK_ROOT: ${{ steps.setup-android.outputs.android-home }}
+          ANDROID_HOME: /usr/local/lib/android/sdk
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
