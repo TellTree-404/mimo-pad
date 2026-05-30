@@ -113,19 +113,39 @@ export function SettingsPanel({
 
           {tab === 'mcp' && (
             <div className="space-y-4">
-              <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--bg-tertiary)]">
-                <div className="text-sm text-[var(--text-primary)] font-medium mb-1">工作目录</div>
-                <div className="flex items-center gap-2">
+              <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-tertiary)]">
+                <div className="text-sm text-[var(--text-primary)] font-medium mb-2">工作目录</div>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={workDir || ''}
+                    onChange={(e) => setWorkDir(e.target.value)}
+                    onBlur={() => { if (workDir) mcpManager.setWorkDir?.(workDir); }}
+                    placeholder="/storage/emulated/0/..."
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-border)] min-h-[44px]"
+                  />
                   <button
                     onClick={handlePickDir}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--accent-bg)] text-[var(--accent-light)] text-xs hover:bg-[var(--accent-border)] transition-colors"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[var(--accent-bg)] text-[var(--accent-light)] text-sm hover:bg-[var(--accent-border)] transition-colors min-h-[44px]"
                   >
-                    <FolderOpen size={14} />
-                    选择目录
+                    <FolderOpen size={16} />
+                    浏览
                   </button>
-                  <span className="text-xs text-[var(--text-muted)] truncate">
-                    {workDir || '未选择'}
-                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { label: 'Termux', path: '/data/data/com.termux/files/home' },
+                    { label: '下载', path: '/storage/emulated/0/Download' },
+                    { label: '文档', path: '/storage/emulated/0/Documents' },
+                  ].map((p) => (
+                    <button
+                      key={p.path}
+                      onClick={() => { setWorkDir(p.path); mcpManager.setWorkDir?.(p.path); }}
+                      className="px-3 py-1.5 rounded-lg bg-[var(--bg-hover)] text-xs text-[var(--text-secondary)] hover:text-[var(--accent-light)] transition-colors"
+                    >
+                      {p.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -224,24 +244,49 @@ export function SettingsPanel({
               </label>
 
               <div>
-                <label className="text-sm text-[var(--text-muted)]">背景图片 URL</label>
-                <div className="flex gap-2 mt-2">
-                  <input
-                    type="text"
-                    value={settings.backgroundImage || ''}
-                    onChange={(e) => onUpdate({ backgroundImage: e.target.value || undefined })}
-                    placeholder="留空使用纯色背景..."
-                    className="flex-1 px-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-border)] min-h-[48px]"
-                  />
+                <label className="text-sm text-[var(--text-muted)]">背景图片</label>
+                <div className="flex items-center gap-2 mt-2">
+                  <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)] text-sm text-[var(--text-secondary)] cursor-pointer hover:border-[var(--accent-border)] transition-colors min-h-[48px]">
+                    📷 从相册选择
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          const dataUrl = reader.result as string;
+                          const img = new Image();
+                          img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            const maxW = 800;
+                            const scale = Math.min(1, maxW / img.width);
+                            canvas.width = img.width * scale;
+                            canvas.height = img.height * scale;
+                            canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            const compressed = canvas.toDataURL('image/jpeg', 0.6);
+                            onUpdate({ backgroundImage: compressed });
+                          };
+                          img.src = dataUrl;
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                  </label>
                   {settings.backgroundImage && (
                     <button
                       onClick={() => onUpdate({ backgroundImage: undefined })}
-                      className="px-4 py-3 rounded-xl bg-red-500/10 text-red-400 text-sm hover:bg-red-500/20"
+                      className="px-4 py-3 rounded-xl bg-red-500/10 text-red-400 text-sm hover:bg-red-500/20 min-h-[48px]"
                     >
                       清除
                     </button>
                   )}
                 </div>
+                {settings.backgroundImage && (
+                  <div className="mt-2 w-full h-20 rounded-xl bg-cover bg-center border border-[var(--border)]" style={{ backgroundImage: `url(${settings.backgroundImage})` }} />
+                )}
               </div>
             </div>
           )}

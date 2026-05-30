@@ -1,5 +1,7 @@
 import type { McpServerConfig, McpTool, ToolResult } from '../types';
 import { nanoid } from 'nanoid';
+import { getDeviceInfo, formatDeviceInfo } from '../hooks/useDeviceInfo';
+import { findApp, buildIntentUri, APP_REGISTRY } from './apps';
 
 const BUILTIN_TOOLS: Record<string, { description: string; inputSchema: Record<string, unknown> }> = {
   read_file: {
@@ -42,6 +44,22 @@ const BUILTIN_TOOLS: Record<string, { description: string; inputSchema: Record<s
         code: { type: 'string', description: 'The JavaScript code to execute' },
       },
       required: ['code'],
+    },
+  },
+  device_info: {
+    description: 'Query current device hardware info (CPU/GPU/RAM/storage/network). Use this before recommending tools or optimizing code for this device.',
+    inputSchema: { type: 'object', properties: {}, required: [] },
+  },
+  app_control: {
+    description: `Launch or interact with installed Android apps. Known apps: ${APP_REGISTRY.map(a => a.name).join(', ')}`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        app: { type: 'string', description: 'App name or ID' },
+        action: { type: 'string', enum: ['launch', 'search', 'open_url'], description: 'launch/open URL/path' },
+        query: { type: 'string', description: 'Search keyword or URL' },
+      },
+      required: ['app', 'action'],
     },
   },
   github_get_file: {
@@ -93,6 +111,15 @@ class McpManager {
   private connections: Map<string, McpClientConnection> = new Map();
   private fileHandles: Map<string, FileSystemFileHandle> = new Map();
   private pickedDir: FileSystemDirectoryHandle | null = null;
+  private workDirPath: string = '';
+
+  setWorkDir(path: string) {
+    this.workDirPath = path;
+  }
+
+  getWorkDir() {
+    return this.workDirPath;
+  }
 
   async connect(server: McpServerConfig): Promise<void> {
     if (server.type === 'builtin') {
@@ -351,6 +378,44 @@ class McpManager {
           };
         } catch (e) {
           throw new Error(`GitHub search failed: ${e instanceof Error ? e.message : String(e)}`);
+        }
+      }
+
+      case 'device_info': {
+        try {
+          const info = await getDeviceInfo();
+          return { toolCallId, content: formatDeviceInfo(info) };
+        } catch (e) {
+          return { toolCallId, content: `设备信息获取失败: ${e}` };
+        }
+      }
+
+      case 'app_control': {
+        const appName = (args.app as string) || '';
+        const action = (args.action as string) || 'launch';
+        const query = args.query as string | undefined;
+        const app = findApp(appName);
+
+        if (!app) {
+          return { toolCallId, content: `未找到应用 "${appName}"。已知应用: ${APP_REGISTRY.map(a => `${a.name}(${a.id})`).join(', ')}。请直接通过包名用 intent:// 协议尝试。` };
+        }
+
+        const uri = buildIntentUri(app, action, query);
+        if (!uri) {
+          return { toolCallId, content: `无法为 "${app.name}" 构建 ${action} intent。` };
+        }
+
+        try {
+          if (action === 'open_url') {
+            window.open(uri, '_blank');
+          } else {
+            const a = document.createElement('a');
+            a.href = uri;
+            a.click();
+          }
+          return { toolCallId, content: `已唤起 ${app.name}: ${action}${query ? ` (${query})` : ''}` };
+        } catch (e) {
+          return { toolCallId, content: `唤起失败: ${e}。请确认应用已安装。` };
         }
       }
 

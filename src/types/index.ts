@@ -184,3 +184,26 @@ export interface McpPrompt {
   description?: string;
   arguments?: { name: string; description?: string; required?: boolean }[];
 }
+
+export interface GoalPhase {
+  id: string;
+  title: string;
+  status: 'pending' | 'doing' | 'done';
+  tasks: string[];
+  conversationId?: string;
+  notes?: string;
+}
+
+export interface Goal {
+  id: string;
+  title: string;
+  description?: string;
+  status: 'active' | 'paused' | 'done';
+  phases: GoalPhase[];
+  projectId?: string;
+  autoProgress: boolean;
+  maxRetries: number;
+  currentRetries: number;
+  createdAt: number;
+  updatedAt: number;
+}

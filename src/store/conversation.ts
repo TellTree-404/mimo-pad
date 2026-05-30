@@ -3,6 +3,8 @@ import type { Conversation, ChatMessage, Project } from '../types';
 import { storage } from '../services/storage';
 import { nanoid } from 'nanoid';
 
+let updateTimer: ReturnType<typeof setTimeout>;
+
 interface ConversationState {
   conversations: Conversation[];
   projects: Project[];
@@ -147,6 +149,8 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
       });
       return { conversations };
     });
+    const conv = get().conversations.find((c) => c.id === convId);
+    if (conv) storage.saveConversation(conv);
   },
 
   updateMessage(convId, messageId, partial) {
@@ -162,6 +166,11 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
         };
       }),
     }));
+    const conv = get().conversations.find((c) => c.id === convId);
+    if (conv) {
+      clearTimeout(updateTimer);
+      updateTimer = setTimeout(() => storage.saveConversation(conv), 1000);
+    }
   },
 
   setGenerating(v) {

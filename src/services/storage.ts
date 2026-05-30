@@ -1,4 +1,4 @@
-import type { Conversation, AppSettings, MemoryEntry, ProviderConfig, ExportedSkill } from '../types';
+import type { Conversation, AppSettings, MemoryEntry, ProviderConfig, ExportedSkill, Goal } from '../types';
 
 const DB_NAME = 'mimo-pad-db';
 const DB_VERSION = 3;
@@ -19,6 +19,9 @@ function openDB(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains('projects')) {
         db.createObjectStore('projects', { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains('goals')) {
+        db.createObjectStore('goals', { keyPath: 'id' });
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -91,6 +94,21 @@ export const storage = {
   },
   async deleteProject(id: string): Promise<void> {
     await dbOp('projects', 'readwrite', (s) => s.delete(id));
+  },
+
+  async getAllGoals(): Promise<Goal[]> {
+    try { return await dbOp('goals', 'readonly', (s) => s.getAll()); }
+    catch { return []; }
+  },
+  async getActiveGoal(projectId?: string): Promise<Goal | undefined> {
+    const goals = await this.getAllGoals();
+    return goals.find((g) => g.status === 'active' && g.projectId === projectId);
+  },
+  async saveGoal(goal: Goal): Promise<void> {
+    await dbOp('goals', 'readwrite', (s) => s.put(goal));
+  },
+  async deleteGoal(id: string): Promise<void> {
+    await dbOp('goals', 'readwrite', (s) => s.delete(id));
   },
 
   getSettings(): AppSettings | null {
